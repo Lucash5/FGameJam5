@@ -4,9 +4,11 @@ using UnityEngine.AI;
 
 public class GuardController : MonoBehaviour
 {
+    
     public Transform target;         // The player's transform.
     public float chaseDistance = 10f; // Distance at which the guard starts chasing.
 
+    private Rigidbody rb;
     private NavMeshAgent agent;
     private Animator animator;
     private bool isChasing = false;
@@ -15,8 +17,9 @@ public class GuardController : MonoBehaviour
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         agent = GetComponent<NavMeshAgent>();
-        //animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -42,13 +45,23 @@ public class GuardController : MonoBehaviour
             agent.SetDestination(target.position);
         }
 
-        if (Input.GetKeyDown(KeyCode.E) && ghostmode == false)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && ghostmode == false)
         {
             ghostmode = true;
         }
-        else if (Input.GetKeyDown(KeyCode.E) && ghostmode == true)
+        else if (Input.GetKeyUp(KeyCode.LeftShift) && ghostmode == true)
         {
             ghostmode = false;
         }
+
+
+        animator.SetFloat("velX", rb.velocity.x);
+        animator.SetFloat("velY", rb.velocity.z);
+
     }
+    public void nostamina()
+    {
+        ghostmode = false;
+    }
+
 }

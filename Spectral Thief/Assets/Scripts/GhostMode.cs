@@ -7,6 +7,9 @@ public class GhostMode : MonoBehaviour
 {
     bool mode = false;
 
+    
+    
+
     public AudioClip AC;
     public AudioSource AS;
     public SkinnedMeshRenderer smr1;
@@ -32,7 +35,7 @@ public class GhostMode : MonoBehaviour
     void Update()
     {
       
-        if (Input.GetKeyDown(KeyCode.E) && mode == false)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && mode == false)
         {
             //float gamma = 1 - (0.1f * Time.deltaTime);
             //camera.transform.gameObject.GetComponent<PostProcessVolume>().get = new Vector4(gamma,0,0,0);
@@ -53,7 +56,7 @@ public class GhostMode : MonoBehaviour
             
             
         }
-        else if (Input.GetKeyDown(KeyCode.E) && mode == true)
+        else if (Input.GetKeyUp(KeyCode.LeftShift) && mode == true)
         {
             camera.transform.gameObject.layer = 0;
             smr1.material = ogmaterial1;
@@ -62,5 +65,16 @@ public class GhostMode : MonoBehaviour
             mode = false;
             AS.Stop();
         }
+
+
     }
+    public void Nostamina()
+    {
+        camera.transform.gameObject.layer = 0;
+        smr1.material = ogmaterial1;
+        smr2.material = ogmaterial2;
+        mode = false;
+        AS.Stop();
+    }
+    
 }

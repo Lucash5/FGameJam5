@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 public class GhostModeStamina : MonoBehaviour
 {
-
+    public GhostMode script;
+    public GuardController guardcontroller;
 
     [Range(0, 4000)]
-    public int stamina;
-    public int maxstamina = 2000;
+    public float stamina;
+    public float maxstamina = 2000;
 
     public RectTransform uiBar;
 
@@ -40,6 +41,45 @@ public class GhostModeStamina : MonoBehaviour
     }
     private void FixedUpdate()
     {
-       
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            StartCoroutine(decreasing());
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            StopCoroutine(decreasing());
+        }
+        else if (!Input.GetKey(KeyCode.LeftShift))
+        {
+            StartCoroutine(increasing());
+        }
+    }
+
+    IEnumerator decreasing()
+    {
+
+        if (stamina > 0)
+        {
+        stamina = stamina - 5;
+        }
+        else if (stamina == 0)
+        {
+            script.Nostamina();
+            guardcontroller.nostamina();
+            StopCoroutine(decreasing());
+        }
+
+
+        
+        yield return new WaitForSeconds(1);
+    }
+
+    IEnumerator increasing()
+    {
+        if (stamina < maxstamina)
+        {
+            stamina = stamina + 5;
+        }
+        yield return new WaitForSeconds(1);
     }
 }
