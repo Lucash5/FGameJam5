@@ -7,9 +7,9 @@ public class GhostMode : MonoBehaviour
 {
     bool mode = false;
 
-    
-    
 
+
+    public AudioClip AC2;
     public AudioClip AC;
     public AudioSource AS;
     public SkinnedMeshRenderer smr1;
@@ -51,8 +51,8 @@ public class GhostMode : MonoBehaviour
             smr2.material = material2;
             //smr3.material = material3;
             mode = true;
-           
-            AS.Play();
+            AS.Stop();
+            
             
             
         }
@@ -64,8 +64,19 @@ public class GhostMode : MonoBehaviour
             //smr3.material = ogmaterial3;
             mode = false;
             AS.Stop();
+            
         }
-
+        if (!AS.isPlaying)
+        {
+            if (mode == false)
+            {
+                AS.PlayOneShot(AC2);
+            }
+            else if (mode == true)
+            {
+                AS.PlayOneShot(AC);
+            }
+        }
 
     }
     public void Nostamina()
@@ -76,5 +87,7 @@ public class GhostMode : MonoBehaviour
         mode = false;
         AS.Stop();
     }
+
+   
     
 }

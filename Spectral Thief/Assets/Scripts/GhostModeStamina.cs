@@ -78,7 +78,7 @@ public class GhostModeStamina : MonoBehaviour
     {
         if (stamina < maxstamina)
         {
-            stamina = stamina + 5;
+            stamina = stamina + 3;
         }
         yield return new WaitForSeconds(1);
     }
