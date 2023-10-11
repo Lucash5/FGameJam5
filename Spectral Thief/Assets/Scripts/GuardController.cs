@@ -4,6 +4,8 @@ using System.Collections;
 
 public class GuardController : MonoBehaviour
 {
+    
+    bool patrol = false;
     bool isconfused = false;
     bool lockedon = false;
 
@@ -21,11 +23,17 @@ public class GuardController : MonoBehaviour
 
     bool ghostmode = false;
 
+    Vector3 patrolpathstart;
+    public Transform patrolpathend;
+    //Vector3 patrolpathend = new Vector3(-2f, 0.923f, 4.749324f);
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
+        patrolpathstart = agent.transform.position;
+
     }
 
     void Update()
@@ -50,18 +58,28 @@ public class GuardController : MonoBehaviour
                 if (hit.collider.gameObject.name == "Player")
                 {
                     StopCoroutine(lostvisual());
-            isChasing = true;
-            agent.SetDestination(target.position);
-            //animator.SetBool("IsChasing", true);
+                    isChasing = true;
+                    StopCoroutine(patrolling());
+                    patrol = false;
+                    agent.SetDestination(target.position);
+                    //animator.SetBool("IsChasing", true);
                 }
 
-               
+
             }
         }
         else
         {
-            isChasing = false; 
+            isChasing = false;
+            StartCoroutine(patrolling());
         }
+
+        if (isChasing == true)
+        {
+            StopCoroutine(patrolling());
+            patrol = false;
+        }
+
      
             //animator.SetBool("IsChasing", false);
         
@@ -97,10 +115,11 @@ public class GuardController : MonoBehaviour
            
         if (isChasing && distanceToTarget > 2 && isconfused == false)
         {
+            StopCoroutine(patrolling());
             animator.SetFloat("velY", 1);
             animator.SetFloat("velX", 0);
         }
-        else if (!isChasing && distanceToTarget > 2 && isconfused == false)
+        else if (!isChasing && distanceToTarget > 2 && isconfused == false && patrol == false)
         {
             animator.SetFloat("velY", 0);
             animator.SetFloat("velX", 0);
@@ -134,4 +153,47 @@ public class GuardController : MonoBehaviour
         yield return new WaitForSeconds(5);
         isChasing = false;
     }
+
+
+    IEnumerator patrolling()
+    {
+
+       
+        yield return new WaitForSeconds(3);
+        patrol = true;
+
+
+
+
+
+        float distance = Vector3.Distance(transform.position, patrolpathend.position);
+        bool a = false;
+        if (distance < 0.5 && a == false)
+        {
+            animator.SetFloat("velY", 0);
+            animator.SetFloat("velX", 0);
+            yield return new WaitForSeconds(5);
+            agent.SetDestination(patrolpathstart);
+            animator.SetFloat("velY", 1);
+            animator.SetFloat("velX", 0);
+        }
+
+        a = true;
+        float distance2 = Vector3.Distance(transform.position, patrolpathstart);
+        bool b = false;
+        if (distance2 < 0.5 && b == false)
+        {
+            Debug.Log("amogus");
+            animator.SetFloat("velY", 0);
+            animator.SetFloat("velX", 0);
+            yield return new WaitForSeconds(5);
+            agent.SetDestination(patrolpathend.position);
+            animator.SetFloat("velY", 1);
+            animator.SetFloat("velX", 0);
+            
+        }
+        b = true;
+        }
+
+    
 }
