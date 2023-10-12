@@ -25,22 +25,40 @@ public class GuardController : MonoBehaviour
     private bool isChasing = false;
 
     bool ghostmode = false;
+    bool isIdling = false;
+    public Transform[] patrolPoints;
 
-    public Transform patrolpathstart;
-    
-    public Transform patrolpathend;
+    int currentPatrolIndex = 0;
+
     //Vector3 patrolpathend = new Vector3(-2f, 0.923f, 4.749324f);
+
+    EnemyState state;
+
+    public bool Isconfused
+    {
+        get => isconfused;
+        set
+        {
+            isconfused = value;
+            animator.SetBool("isConfused", value);
+        }
+    }
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
-        
 
-        agent.SetDestination(patrolpathend.position);
-        StartCoroutine(jogging());
-
+        if (patrolPoints.Length > 1)
+        {
+            agent.SetDestination(patrolPoints[1].position);
+            state = EnemyState.Patrol;
+        }
+        else
+        {
+            state = EnemyState.Idle;
+        }
     }
 
     void Update()
@@ -51,8 +69,8 @@ public class GuardController : MonoBehaviour
         // If the player is close enough, start chasing.
         if (distanceToTarget < chaseDistance && ghostmode == false)
         {
-            
-            
+
+
             lockedon = true;
             float raycastdistance = 16f;
             Vector3 direction = player.position - guard.position;
@@ -66,61 +84,59 @@ public class GuardController : MonoBehaviour
                 //Debug.Log("Hit something: " + hit.collider.gameObject.name);
                 if (hit.collider.gameObject.name == "Player")
                 {
-                    
-                    lost = false;
-                    isChasing = true;
-                    StopCoroutine(patrolling());
-                    patrol = false;
-                    agent.SetDestination(target.position);
-                    //animator.SetBool("IsChasing", true);
+                    state = EnemyState.Chasing;
+                }
+            }
+        }
+        else if (state == EnemyState.Chasing)
+        {
+            state = EnemyState.Confused;
+        }
+
+
+        switch (state)
+        {
+            case EnemyState.Idle:
+                if (!isIdling)
+                    StartCoroutine(Idle());
+                break;
+            case EnemyState.Patrol:
+                Patrol();
+                break;
+            case EnemyState.Confused:
+                if (!Isconfused)
+                    StartCoroutine(confusion());
+                break;
+            case EnemyState.Chasing:
+                agent.SetDestination(player.position);
+                if (Isconfused)
+                {
+                    Isconfused = false;
+                    StopCoroutine(confusion());
+                }
+
+                animator.SetFloat("velocity", agent.velocity.magnitude);
+
+                if (isIdling)
+                {
+                    isIdling = false;
+                    StopCoroutine(Idle());
+                }
+
+                agent.isStopped = false;
+
+                if (Vector3.Distance(player.position, this.transform.position) < agent.stoppingDistance)
+                {
+                    StartCoroutine(Catch());
                 }
 
 
-            }
-        }
-        else
-        {
-            isChasing = false;
-            
-        }
-   
-
-        if (isChasing == true)
-        {
-            lost2 = true;
-            lost = false;
-            StartCoroutine(jogging());
-            StopCoroutine(patrolling());
-            patrol = false;
-        }
-        else if (isChasing == false)
-        {
-            lost = true;
-            StartCoroutine(patrolling());
+                break;
         }
 
-        if (lost == true && lost2 == true)
-        {
-            lost2 = false;
-            StartCoroutine(confusion());
-        }
 
         //animator.SetBool("IsChasing", false);
 
-
-        if (distanceToTarget < 1)
-        {
-
-            StartCoroutine(catching());
-            StartCoroutine(resetgame());
-
-        }
-
-        // If the guard is currently chasing, update its destination.
-        if (isChasing)
-        {
-            agent.SetDestination(target.position);
-        }
 
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
@@ -131,9 +147,6 @@ public class GuardController : MonoBehaviour
             ghostmode = false;
         }
 
-  
-
-
     }
     public void nostamina()
     {
@@ -142,74 +155,42 @@ public class GuardController : MonoBehaviour
 
     IEnumerator confusion()
     {
-        isconfused = true;
-        animator.Play("Confusion");
+        Isconfused = true;
+        animator.Play("Confusion", 0);
         yield return new WaitForSeconds(3);
-        isconfused = false;
+        state = EnemyState.Patrol;
+        Isconfused = false;
     }
 
-    IEnumerator lostvisual()
+    public void Patrol()
     {
-        lost = true;
-        Debug.Log("start");
-        yield return new WaitForSeconds(5);
-        if (lost == true)
+        if (patrolPoints.Length > 1)
         {
-        Debug.Log("Commence");
+            if (currentPatrolIndex == patrolPoints.Length)
+            {
+                currentPatrolIndex = 0;
+            }
+            if (Vector3.Distance(this.transform.position, patrolPoints[currentPatrolIndex].position) < agent.stoppingDistance)
+            {
 
-        isChasing = false;
-        StartCoroutine(confusion());
-        StartCoroutine(patrolling());
+                state = EnemyState.Idle;
+                // Stopped at the patrol point
+                agent.isStopped = true;
+                currentPatrolIndex++;
+
+                animator.SetFloat("velocity", 0);
+            }
+            else
+            {
+                Debug.Log("ASD");
+                agent.isStopped = false;
+                animator.SetFloat("velocity", agent.velocity.magnitude);
+                agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+            }
         }
     }
 
-    bool commencing = false;
-    bool a = false;
-    bool b = false;
 
-    IEnumerator patrolling()
-    {
-        yield return new WaitForSeconds(3);
-        if (!commencing)
-        {
-            
-            commencing = true;
-            
-         
-
-            float distance = Vector3.Distance(transform.position, patrolpathend.position);
-            yield return new WaitForSeconds(2);
-            if (!a)
-            {
-                a = true;
-                //Debug.Log("1");
-                StartCoroutine(idling());
-                yield return new WaitForSeconds(5);
-                agent.SetDestination(patrolpathstart.position);
-                StartCoroutine(jogging());
-            }
-            
-            float distance2 = Vector3.Distance(agent.destination, transform.position);
-            yield return new WaitForSeconds(2);
-            if (!b)
-            {
-                b = true;
-                //Debug.Log("2");
-                StartCoroutine(idling());
-                yield return new WaitForSeconds(5);
-                agent.SetDestination(patrolpathend.position);
-                StartCoroutine(jogging());
-            }
-
-
-            if (a && b)
-            {
-                a = false;
-                b = false;
-            commencing = false;
-            }
-        }
-    }
     /*IEnumerator patrolling()
     {
 
@@ -253,32 +234,20 @@ public class GuardController : MonoBehaviour
         commencing = false;
     }*/
 
-    IEnumerator jogging()
+    IEnumerator Idle()
     {
-
-       
-        animator.Play("Jog");
-        yield return new WaitForSeconds(0);
-        
+        isIdling = true;
+        yield return new WaitForSeconds(3);
+        state = EnemyState.Patrol;
+        isIdling = false;
     }
 
-    IEnumerator idling()
+    IEnumerator Catch()
     {
-
-       
-         
-            animator.Play("Idle");
-            yield return new WaitForSeconds(0);
-        
-    }
-    IEnumerator catching()
-    {
-
-
-
-        animator.Play("Catch");
-        yield return new WaitForSeconds(0);
-
+        animator.Play("Catch", 0);
+        state = EnemyState.Catch;
+        yield return new WaitForSeconds(0.2f);
+        StartCoroutine(resetgame());
     }
 
 
@@ -288,4 +257,29 @@ public class GuardController : MonoBehaviour
         SceneManager.LoadScene("SampleScene");
     }
 
+
+    private void OnDrawGizmos()
+    {
+
+        Gizmos.color = Color.red;
+        if (patrolPoints.Length > 0)
+        {
+            for (int i = 0; i < patrolPoints.Length; i++)
+            {
+                if (i + 1 < patrolPoints.Length)
+                {
+                    Gizmos.DrawLine(patrolPoints[i].position, patrolPoints[i + 1].position);
+                }
+            }
+        }
+    }
+}
+
+public enum EnemyState
+{
+    Idle,
+    Patrol,
+    Confused,
+    Chasing,
+    Catch
 }
