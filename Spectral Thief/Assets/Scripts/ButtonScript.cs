@@ -11,7 +11,7 @@ public class ButtonScript : MonoBehaviour
 
     private void Start()
     {
-        settingsScreen.SetActive(false);
+
     }
     public void buttonPlay()
     {
