@@ -2,9 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+
 public class GuardController : MonoBehaviour
 {
+    bool hasfound = false;
 
+    AudioSource aaaaa;
     bool lost = true;
     bool lost2 = false;
 
@@ -46,6 +50,7 @@ public class GuardController : MonoBehaviour
 
     void Start()
     {
+        aaaaa = GetComponent<AudioSource>();
         rb = GetComponent<Rigidbody>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
@@ -84,6 +89,7 @@ public class GuardController : MonoBehaviour
                 //Debug.Log("Hit something: " + hit.collider.gameObject.name);
                 if (hit.collider.gameObject.name == "Player")
                 {
+
                     state = EnemyState.Chasing;
                 }
             }
@@ -125,15 +131,20 @@ public class GuardController : MonoBehaviour
 
                 agent.isStopped = false;
 
+
+
+                break;
+        }
                 if (Vector3.Distance(player.position, this.transform.position) < agent.stoppingDistance)
                 {
                     StartCoroutine(Catch());
                 }
 
-
-                break;
+        if (state == EnemyState.Chasing && hasfound == false)
+        {
+            hasfound = true;
+            aaaaa.Play();
         }
-
 
         //animator.SetBool("IsChasing", false);
 
@@ -182,7 +193,7 @@ public class GuardController : MonoBehaviour
             }
             else
             {
-                Debug.Log("ASD");
+                
                 agent.isStopped = false;
                 animator.SetFloat("velocity", agent.velocity.magnitude);
                 agent.SetDestination(patrolPoints[currentPatrolIndex].position);
@@ -254,7 +265,8 @@ public class GuardController : MonoBehaviour
     IEnumerator resetgame()
     {
         yield return new WaitForSeconds(1.5f);
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("Map");
+        Debug.Log("AMOGUS AGOUAGMOAGUS");
     }
 
 

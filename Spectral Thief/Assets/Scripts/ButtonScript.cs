@@ -9,13 +9,9 @@ public class ButtonScript : MonoBehaviour
 
     public GameObject settingsScreen;
 
-    private void Start()
-    {
-        settingsScreen.SetActive(false);
-    }
     public void buttonPlay()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        SceneManager.LoadScene("Map");
         Debug.Log("LEVEL LOADED LOL!!!!!!!!!1111");
     }
     public void buttonQuit()
